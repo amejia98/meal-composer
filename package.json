@@ -1,0 +1,19 @@
+{
+  "name": "souschef",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A meal composer. Currently: the food library builder.",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node scripts/dev.js & sleep 1 && node test/e2e.js; kill %1",
+    "test:all": "npm test && npm run test:e2e"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

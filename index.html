@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf7f2">
+<title>Sous Chef — Library</title>
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+
+<header>
+  <h1><span id="title-text">Your library</span> <span id="count"></span></h1>
+</header>
+
+<main>
+
+<!-- ============================== LIBRARY ============================== -->
+<section id="v-lib" class="view active">
+  <div class="seg">
+    <button id="tab-items" class="on" data-action="tab-items">Food items</button>
+    <button id="tab-recipes" data-action="tab-recipes">Recipes</button>
+  </div>
+
+  <div class="field">
+    <label class="sr-only" for="search">Search</label>
+    <input id="search" placeholder="Search…">
+  </div>
+
+  <div id="lib-list"></div>
+
+  <div class="row" style="margin-top:20px">
+    <button class="btn-ghost btn-sm" style="flex:1" data-action="export">Export backup</button>
+    <button class="btn-ghost btn-sm" style="flex:1" data-action="import">Import</button>
+  </div>
+  <input type="file" id="importfile" accept="application/json,.json" class="hidden">
+  <p class="note" id="storagenote"></p>
+</section>
+
+<!-- ============================= ADD ITEM ============================== -->
+<section id="v-item" class="view">
+
+  <div class="card">
+    <h2>What is it?</h2>
+    <div class="field">
+      <label for="i-name">Name</label>
+      <input id="i-name" placeholder="Queso panela">
+    </div>
+    <div class="field">
+      <label for="i-cat">Category</label>
+      <select id="i-cat">
+        <option value="protein">Protein</option>
+        <option value="carb">Carb / grain</option>
+        <option value="fruit">Fruit</option>
+        <option value="veg">Vegetable</option>
+        <option value="dairy">Dairy</option>
+        <option value="fat">Fat / nuts</option>
+        <option value="condiment">Condiment</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Nutrition, as printed on the label</h2>
+    <p class="hint">Enter exactly what the label says — don't adjust it yet.
+      You'll set your real portion in the next step.</p>
+
+    <div class="seg">
+      <button id="m-type" class="on" data-action="mode-type">Type it in</button>
+      <button id="m-paste" data-action="mode-paste">Paste label text</button>
+    </div>
+
+    <div id="paste-box" class="hidden">
+      <div class="field">
+        <label class="sr-only" for="i-paste">Label text</label>
+        <textarea id="i-paste" placeholder="On your phone: point the camera at the nutrition panel, tap the Live Text icon, select all the text, copy, and paste it here."></textarea>
+      </div>
+      <button class="btn-ghost btn-sm" data-action="read-label">Read the label</button>
+      <p class="note" id="parse-result"></p>
+    </div>
+
+    <div class="field">
+      <label for="i-lblamt">Label serving size — amount &amp; unit</label>
+      <div class="row">
+        <input id="i-lblamt" type="number" inputmode="decimal" step="any" placeholder="100" style="flex:1">
+        <input id="i-lblunit" placeholder="g" aria-label="Unit" style="flex:1">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="i-cal">Calories</label>
+        <input id="i-cal" type="number" inputmode="decimal" step="any"></div>
+      <div class="field"><label for="i-pro">Protein (g)</label>
+        <input id="i-pro" type="number" inputmode="decimal" step="any"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="i-carb">Carbs (g)</label>
+        <input id="i-carb" type="number" inputmode="decimal" step="any"></div>
+      <div class="field"><label for="i-fat">Fat (g)</label>
+        <input id="i-fat" type="number" inputmode="decimal" step="any"></div>
+    </div>
+    <div class="field"><label for="i-fib">Fiber (g)</label>
+      <input id="i-fib" type="number" inputmode="decimal" step="any"></div>
+  </div>
+
+  <div class="card">
+    <h2>How much do you actually eat?</h2>
+    <p class="hint">The bit that quietly wrecks a library if you skip it. Labels are
+      per 100g or per manufacturer serving; you eat one slice.</p>
+    <div class="field">
+      <label for="i-servlabel">Your serving, in words</label>
+      <input id="i-servlabel" placeholder="1 slice">
+    </div>
+    <div class="field">
+      <label for="i-myamt">…which is how much, in label units?</label>
+      <div class="row">
+        <input id="i-myamt" type="number" inputmode="decimal" step="any" placeholder="28" style="flex:1">
+        <input id="i-myunit" disabled placeholder="g" aria-label="Unit" style="flex:1;opacity:.6">
+      </div>
+    </div>
+    <div class="prev">
+      <div class="lab">One serving will be stored as</div>
+      <div class="val" id="i-preview">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Details</h2>
+    <div class="field">
+      <label>Shows up at</label>
+      <div class="chips" id="i-slots">
+        <span class="chip" data-slot="breakfast" data-action="toggle-chip">Breakfast</span>
+        <span class="chip" data-slot="lunch" data-action="toggle-chip">Lunch</span>
+        <span class="chip" data-slot="dinner" data-action="toggle-chip">Dinner</span>
+        <span class="chip" data-slot="snack" data-action="toggle-chip">Snack</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Pantry</label>
+      <div class="chips">
+        <span class="chip" id="i-always" data-action="toggle-chip">I always have this</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" data-action="save-item">Save item</button>
+  <button class="btn-ghost btn-sm" style="width:100%;margin-top:10px" data-action="cancel-item">Cancel</button>
+  <p class="note" id="i-editing"></p>
+</section>
+
+<!-- ============================ ADD RECIPE ============================= -->
+<section id="v-recipe" class="view">
+  <div class="card">
+    <h2>The recipe</h2>
+    <div class="field"><label for="r-name">Name</label>
+      <input id="r-name" placeholder="Marinated chicken bowls"></div>
+    <div class="row">
+      <div class="field"><label for="r-servings">Makes how many servings</label>
+        <input id="r-servings" type="number" inputmode="numeric" min="1" value="4"></div>
+      <div class="field"><label for="r-active">Active time (min)</label>
+        <input id="r-active" type="number" inputmode="numeric" placeholder="25"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Ingredients</h2>
+    <p class="hint">Pulled from your food items — quantities are in servings of that
+      item. Add the item first if it isn't here yet.</p>
+    <div id="r-ings"></div>
+    <div class="row" style="margin-top:6px">
+      <label class="sr-only" for="r-picker">Food item</label>
+      <select id="r-picker" style="flex:2"></select>
+      <button id="r-adding" class="btn-ghost btn-sm" style="flex:none" data-action="add-ing">Add</button>
+    </div>
+    <div class="prev" style="margin-top:14px">
+      <div class="lab">Per serving</div>
+      <div class="val" id="r-preview">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Steps</h2>
+    <p class="hint">Tap a step's tag to flip it between day-of and make-ahead.
+      Make-ahead steps are what Sunday prep will pull from later.</p>
+    <div id="r-steps"></div>
+    <div class="row" style="margin-top:6px">
+      <label class="sr-only" for="r-steptext">Step</label>
+      <input id="r-steptext" placeholder="Marinate the chicken" style="flex:2">
+      <button id="r-addstep" class="btn-ghost btn-sm" style="flex:none" data-action="add-step">Add</button>
+    </div>
+  </div>
+
+  <button class="btn" data-action="save-recipe">Save recipe</button>
+  <button class="btn-ghost btn-sm" style="width:100%;margin-top:10px" data-action="cancel-recipe">Cancel</button>
+  <p class="note" id="r-editing"></p>
+</section>
+
+</main>
+
+<nav>
+  <button id="n-lib" class="on" data-action="go-lib"><span class="ic">☰</span>Library</button>
+  <button id="n-item" data-action="go-item"><span class="ic">+</span>Food item</button>
+  <button id="n-recipe" data-action="go-recipe"><span class="ic">✻</span>Recipe</button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>
