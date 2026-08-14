@@ -196,12 +196,48 @@
   <p class="note" id="r-editing"></p>
 </section>
 
+<!-- ============================== GOALS ================================ -->
+<section id="v-goals" class="view">
+  <div class="card">
+    <h2>Daily targets</h2>
+    <div class="row">
+      <div class="field"><label for="g-cal">Calories</label>
+        <input id="g-cal" type="number" inputmode="decimal" step="any"></div>
+      <div class="field"><label for="g-pro">Protein (g)</label>
+        <input id="g-pro" type="number" inputmode="decimal" step="any"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="g-carb">Carbs (g)</label>
+        <input id="g-carb" type="number" inputmode="decimal" step="any"></div>
+      <div class="field"><label for="g-fat">Fat (g)</label>
+        <input id="g-fat" type="number" inputmode="decimal" step="any"></div>
+    </div>
+    <div class="field"><label for="g-fib">Fiber (g)</label>
+      <input id="g-fib" type="number" inputmode="decimal" step="any"></div>
+    <div class="field"><label for="g-floor">Protein floor per meal (g)</label>
+      <input id="g-floor" type="number" inputmode="decimal" step="any"></div>
+  </div>
+
+  <div class="card">
+    <h2>Why these numbers</h2>
+    <p class="hint">The thing that ends "what are my goals again" — write it in
+      plain language so future-you never has to re-derive it.</p>
+    <div class="field">
+      <label class="sr-only" for="g-rationale">Rationale</label>
+      <textarea id="g-rationale" rows="10"></textarea>
+    </div>
+  </div>
+
+  <button class="btn" data-action="save-goals">Save goals</button>
+</section>
+
 </main>
 
 <nav>
   <button id="n-lib" class="on" data-action="go-lib"><span class="ic">☰</span>Library</button>
   <button id="n-item" data-action="go-item"><span class="ic">+</span>Food item</button>
   <button id="n-recipe" data-action="go-recipe"><span class="ic">✻</span>Recipe</button>
+  <button id="n-goals" data-action="go-goals"><span class="ic">◎</span>Goals</button>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

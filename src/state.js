@@ -15,7 +15,7 @@
 
 const KEY = 'souschef.v1';
 
-const EMPTY = { items: [], recipes: [] };
+const EMPTY = { items: [], recipes: [], goals: null };
 
 let persists = true;
 let memory = null;
@@ -64,5 +64,6 @@ export function merge(incoming) {
     for (const row of [...incoming[key], ...state[key]]) byId.set(row.id, row);
     state[key] = [...byId.values()];
   }
+  if (incoming.goals) state.goals = incoming.goals;
   save();
 }

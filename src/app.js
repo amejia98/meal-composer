@@ -15,13 +15,15 @@ import { state } from './state.js';
 import * as items from './items.js';
 import * as recipes from './recipes.js';
 import * as library from './library.js';
+import * as goals from './goals.js';
 
-const VIEWS = ['lib', 'item', 'recipe'];
+const VIEWS = ['lib', 'item', 'recipe', 'goals'];
 
 const TITLES = {
   lib: () => 'Your library',
   item: () => (items.isEditing() ? 'Edit item' : 'New food item'),
   recipe: () => 'New recipe',
+  goals: () => 'Your goals',
 };
 
 function navigate(view) {
@@ -33,6 +35,7 @@ function navigate(view) {
   document.getElementById('count').textContent =
     view === 'lib' ? library.countLine() : '';
   if (view === 'recipe') recipes.refreshPicker();
+  if (view === 'goals') goals.render();
   window.scrollTo(0, 0);
 }
 
@@ -41,6 +44,7 @@ const ACTIONS = {
   'go-lib': () => navigate('lib'),
   'go-item': () => navigate('item'),
   'go-recipe': () => navigate('recipe'),
+  'go-goals': () => navigate('goals'),
 
   // library
   'tab-items': () => library.setTab('items'),
@@ -68,6 +72,9 @@ const ACTIONS = {
   'save-recipe': () => recipes.saveRecipe(),
   'cancel-recipe': () => { recipes.reset(); navigate('lib'); },
   'delete-recipe': (el) => recipes.remove(el.dataset.id),
+
+  // goals
+  'save-goals': () => goals.saveGoals(),
 };
 
 document.addEventListener('click', (e) => {
@@ -115,4 +122,4 @@ navigate('lib');
 
 // Test hooks. Harmless in production, and the e2e suite drives state through
 // them rather than reaching into module internals.
-window.__souschef = { state, items, recipes, library, navigate, toast };
+window.__souschef = { state, items, recipes, library, goals, navigate, toast };
