@@ -31,7 +31,6 @@ export type FoodItem = {
   lastEaten: string | null;
   source: 'manual' | 'label-scan' | 'barcode';
   barcode?: string | null;
-  verified: boolean;
 };
 
 export type Step = {

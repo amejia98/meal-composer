@@ -11,7 +11,6 @@ function ItemRow({ item, onOpen }: { item: FoodItem; onOpen: (id: string) => voi
       <div>
         <div className="nm">
           {item.name}
-          {!item.verified && <span className="tag unv">unverified</span>}
           {item.alwaysHave && <span className="tag">pantry</span>}
         </div>
         <div className="sub">{item.servingLabel} · {item.nutrition.protein}g protein · {item.nutrition.fiber}g fiber</div>

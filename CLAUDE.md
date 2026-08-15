@@ -172,8 +172,10 @@ API key can't live in client-side code. Two notes:
 - iOS won't grant camera access over plain http from a non-localhost origin.
   Testing on a phone against the dev server will need https — a tunnel
   (cloudflared, ngrok) or mkcert.
-- Auto-filled values must land in the editable form with `verified: false`, not
-  save directly. The UI already flags unverified rows.
+- Auto-filled values must land in the editable form, not save directly — the
+  person should look at the numbers before they're stored. There's no
+  `verified` flag anymore (removed deliberately, don't reintroduce it without
+  asking); the editable-landing-spot requirement stands on its own.
 
 ## Don't
 

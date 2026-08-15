@@ -29,7 +29,6 @@ create table food_items (
   last_eaten date,                                -- FoodItem.lastEaten, unused today, kept
   source text not null check (source in ('manual','label-scan','barcode')),
   barcode text,
-  verified boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -143,8 +143,6 @@ export function ItemForm({
       alwaysHave: form.alwaysHave,
       lastEaten: editingItem?.lastEaten ?? null,
       source: form.fromLabel ? 'label-scan' : 'manual',
-      // Saving an edit means a human just looked at these numbers.
-      verified: editingItem ? true : !form.fromLabel,
       barcode: editingItem?.barcode ?? null,
     };
 
@@ -171,37 +169,41 @@ export function ItemForm({
       </div>
 
       <div className="card">
-        <h2>Nutrition, as printed on the label</h2>
-        <p className="hint">Enter exactly what the label says — don't adjust it yet. You'll set your real portion in the next step.</p>
+        <h2>{editingItem ? 'Nutrition' : 'Nutrition, as printed on the label'}</h2>
+        {!editingItem && (
+          <>
+            <p className="hint">Enter exactly what the label says — don't adjust it yet. You'll set your real portion in the next step.</p>
 
-        <div className="seg">
-          <button className={form.entryMode === 'type' ? 'on' : ''} onClick={() => set('entryMode', 'type')}>Type it in</button>
-          <button className={form.entryMode === 'paste' ? 'on' : ''} onClick={() => set('entryMode', 'paste')}>Paste label text</button>
-        </div>
-
-        {form.entryMode === 'paste' && (
-          <div>
-            <div className="field">
-              <label className="sr-only" htmlFor="i-paste">Label text</label>
-              <textarea
-                id="i-paste"
-                placeholder="On your phone: point the camera at the nutrition panel, tap the Live Text icon, select all the text, copy, and paste it here."
-                value={form.pasteText}
-                onChange={(e) => set('pasteText', e.target.value)}
-              />
+            <div className="seg">
+              <button className={form.entryMode === 'type' ? 'on' : ''} onClick={() => set('entryMode', 'type')}>Type it in</button>
+              <button className={form.entryMode === 'paste' ? 'on' : ''} onClick={() => set('entryMode', 'paste')}>Paste label text</button>
             </div>
-            <button className="btn-ghost btn-sm" onClick={readLabel}>Read the label</button>
-            <p className="note">{form.parseResult}</p>
-          </div>
-        )}
 
-        <div className="field">
-          <label htmlFor="i-lblamt">Label serving size — amount &amp; unit</label>
-          <div className="row">
-            <input id="i-lblamt" type="number" inputMode="decimal" step="any" placeholder="100" value={form.labelAmount} onChange={(e) => set('labelAmount', e.target.value)} />
-            <input placeholder="g" aria-label="Unit" value={form.labelUnit} onChange={(e) => set('labelUnit', e.target.value)} />
-          </div>
-        </div>
+            {form.entryMode === 'paste' && (
+              <div>
+                <div className="field">
+                  <label className="sr-only" htmlFor="i-paste">Label text</label>
+                  <textarea
+                    id="i-paste"
+                    placeholder="On your phone: point the camera at the nutrition panel, tap the Live Text icon, select all the text, copy, and paste it here."
+                    value={form.pasteText}
+                    onChange={(e) => set('pasteText', e.target.value)}
+                  />
+                </div>
+                <button className="btn-ghost btn-sm" onClick={readLabel}>Read the label</button>
+                <p className="note">{form.parseResult}</p>
+              </div>
+            )}
+
+            <div className="field">
+              <label htmlFor="i-lblamt">Label serving size — amount &amp; unit</label>
+              <div className="row">
+                <input id="i-lblamt" type="number" inputMode="decimal" step="any" placeholder="100" value={form.labelAmount} onChange={(e) => set('labelAmount', e.target.value)} />
+                <input placeholder="g" aria-label="Unit" value={form.labelUnit} onChange={(e) => set('labelUnit', e.target.value)} />
+              </div>
+            </div>
+          </>
+        )}
         <div className="row">
           <div className="field"><label htmlFor="i-cal">Calories</label>
             <input id="i-cal" type="number" inputMode="decimal" step="any" value={form.cal} onChange={(e) => set('cal', e.target.value)} /></div>
@@ -219,25 +221,29 @@ export function ItemForm({
       </div>
 
       <div className="card">
-        <h2>How much do you actually eat?</h2>
-        <p className="hint">The bit that quietly wrecks a library if you skip it. Labels are per 100g or per manufacturer serving; you eat one slice.</p>
+        <h2>{editingItem ? 'Your serving' : 'How much do you actually eat?'}</h2>
+        {!editingItem && (
+          <p className="hint">The bit that quietly wrecks a library if you skip it. Labels are per 100g or per manufacturer serving; you eat one slice.</p>
+        )}
         <div className="field">
           <label htmlFor="i-servlabel">Your serving, in words</label>
           <input id="i-servlabel" placeholder="1 slice" value={form.servingLabel} onChange={(e) => set('servingLabel', e.target.value)} />
         </div>
-        <div className="field">
-          <label htmlFor="i-myamt">…which is how much, in label units?</label>
-          <div className="row">
-            <input id="i-myamt" type="number" inputMode="decimal" step="any" placeholder="28" value={form.myAmount} onChange={(e) => set('myAmount', e.target.value)} />
-            <input disabled placeholder="g" aria-label="Unit" value={form.labelUnit} style={{ opacity: 0.6 }} readOnly />
+        {!editingItem && (
+          <div className="field">
+            <label htmlFor="i-myamt">…which is how much, in label units?</label>
+            <div className="row">
+              <input id="i-myamt" type="number" inputMode="decimal" step="any" placeholder="28" value={form.myAmount} onChange={(e) => set('myAmount', e.target.value)} />
+              <input disabled placeholder="g" aria-label="Unit" value={form.labelUnit} style={{ opacity: 0.6 }} readOnly />
+            </div>
           </div>
-        </div>
+        )}
         <div className="prev">
           <div className="lab">One serving will be stored as</div>
           <div className="val">
             {form.servingLabel || '1 serving'}
             <div className="macros" style={{ marginTop: 5 }}>{macroLine(scaled)}</div>
-            {Math.abs(ratio - 1) >= 0.001 && (
+            {!editingItem && Math.abs(ratio - 1) >= 0.001 && (
               <div className="macros" style={{ marginTop: 5 }}>Label values × {round1(ratio)}</div>
             )}
           </div>

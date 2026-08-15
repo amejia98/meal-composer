@@ -131,7 +131,6 @@ type FoodItem = {
   lastEaten?: Date                // drives variety scoring
   source: 'manual' | 'label-scan' | 'barcode'   // provenance — see §7
   barcode?: string                // if known, for re-scan matching
-  verified: boolean               // has a human eyeballed these numbers?
 }
 
 type Nutrition = {
@@ -189,7 +188,7 @@ type Goals = {
 Two notes worth defending:
 
 - **Meal nutrition is derived, never stored.** If you fix a bad entry in the library, every past meal silently corrects itself.
-- **`source` and `verified` exist because auto-filled data is guilty until proven innocent.** An item scanned from a label and never reviewed should be visually marked as such, so when a number looks weird six weeks later you know whether to trust it.
+- **`source` records provenance** (manual entry vs. label-scan vs. barcode), even though nothing currently displays it.
 
 ---
 
@@ -226,7 +225,7 @@ Point the camera at the panel, and the numbers land in the form. This is the hig
 Two details that decide whether this feels good:
 
 - **The serving-size conversion is the actual hard part**, not the OCR. Labels state values per 100g or per manufacturer-defined serving; you eat "one slice." The form must ask "how much do you actually eat?" and rescale. Skipping this produces a library that's quietly wrong in a way you won't notice for months.
-- **Always land in the editable form, never save directly.** Set `source: 'label-scan'`, `verified: false` until you've looked at it.
+- **Always land in the editable form, never save directly.** Set `source: 'label-scan'` and let the person check the numbers before saving.
 
 ### Path C — Barcode
 

@@ -30,7 +30,7 @@ test.beforeEach(async ({ page }) => {
   await clearData(page);
 });
 
-test('label paste, serving conversion, save as unverified', async ({ page }) => {
+test('label paste, serving conversion, save', async ({ page }) => {
   await page.getByText('Food item', { exact: false }).click();
   await page.getByText('Paste label text').click();
   await page.fill('#i-paste', `Información Nutricional
@@ -57,7 +57,7 @@ Proteínas 7 g`);
   await page.locator('.chip[data-slot="breakfast"]').click();
   await page.getByText('Save item').click();
 
-  await expect(page.getByText('unverified')).toBeVisible();
+  await expect(page.getByText('Queso panela')).toBeVisible();
 });
 
 test('a second parse clears what it cannot find', async ({ page }) => {
@@ -70,7 +70,7 @@ test('a second parse clears what it cannot find', async ({ page }) => {
   await expect(page.locator('#i-pro')).toHaveValue('');
 });
 
-test('manual entry saves as verified', async ({ page }) => {
+test('manual entry saves', async ({ page }) => {
   await page.getByText('Food item', { exact: false }).click();
   await page.fill('#i-name', 'Arepa');
   await page.fill('#i-lblamt', '1');
@@ -83,7 +83,7 @@ test('manual entry saves as verified', async ({ page }) => {
   await page.fill('#i-myamt', '1');
   await page.getByText('Save item').click();
 
-  await expect(page.getByText('unverified')).not.toBeVisible();
+  await expect(page.getByText('Arepa')).toBeVisible();
 });
 
 test('recipe math and step phase-flip', async ({ page }) => {
@@ -91,8 +91,8 @@ test('recipe math and step phase-flip', async ({ page }) => {
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
     await supabase.from('food_items').insert([
-      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
-      { name: 'Arepa', category: 'carb', serving_label: '1 arepa', calories: 180, protein: 4, carbs: 38, fat: 2, fiber: 2, source: 'manual', verified: true },
+      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0 },
+      { name: 'Arepa', category: 'carb', serving_label: '1 arepa', calories: 180, protein: 4, carbs: 38, fat: 2, fiber: 2 },
     ]);
   });
 
@@ -126,7 +126,7 @@ test('cannot delete an item a recipe depends on', async ({ page }) => {
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
     const { data: items } = await supabase.from('food_items').insert([
-      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
+      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0 },
     ]).select();
     await supabase.from('recipes').insert({
       name: 'Uses queso', servings: 1,
@@ -148,7 +148,7 @@ test('editing does not silently re-scale nutrition', async ({ page }) => {
       name: 'Queso panela', category: 'dairy', serving_label: '1 slice',
       calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0,
       label_amount: 30, label_unit: 'g', label_my_amount: 45,
-      source: 'label-scan', verified: false,
+      source: 'label-scan',
     });
   });
 

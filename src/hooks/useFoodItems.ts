@@ -22,7 +22,6 @@ type FoodItemRow = {
   last_eaten: string | null;
   source: FoodItem['source'];
   barcode: string | null;
-  verified: boolean;
 };
 
 function fromRow(r: FoodItemRow): FoodItem {
@@ -39,7 +38,6 @@ function fromRow(r: FoodItemRow): FoodItem {
     lastEaten: r.last_eaten,
     source: r.source,
     barcode: r.barcode,
-    verified: r.verified,
   };
 }
 
@@ -63,7 +61,6 @@ function toRow(item: FoodItem) {
     last_eaten: item.lastEaten,
     source: item.source,
     barcode: item.barcode ?? null,
-    verified: item.verified,
   };
 }
 
