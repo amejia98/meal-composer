@@ -40,6 +40,10 @@ input,select,textarea{
 }
 /* 16px minimum on inputs — anything smaller makes iOS Safari zoom on focus. */
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+/* Number inputs read as plain text fields — no spinner arrows. */
+input[type="number"]{-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 textarea{min-height:120px;resize:vertical;line-height:1.45}
 .field{margin-bottom:14px}
 .row{display:flex;gap:10px}

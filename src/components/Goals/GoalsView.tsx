@@ -21,6 +21,8 @@ function targetsToForm(g: Goals): TargetsForm {
   };
 }
 
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
 function targetsToNumbers(f: TargetsForm) {
   return {
     calories: parseFloat(f.calories) || 0,
@@ -98,7 +100,7 @@ export function GoalsView({ goals, onSave }: { goals: Goals; onSave: (g: Goals) 
         <h2>About you</h2>
         <div className="row">
           <div className="field"><label htmlFor="p-age">Age</label>
-            <input id="p-age" type="number" inputMode="numeric" value={profile.age} onChange={(e) => setProfileField('age', parseFloat(e.target.value) || 0)} /></div>
+            <input id="p-age" type="number" inputMode="numeric" max={100} value={profile.age} onChange={(e) => setProfileField('age', clamp(parseFloat(e.target.value) || 0, 0, 100))} /></div>
           <div className="field"><label htmlFor="p-gender">Gender</label>
             <select id="p-gender" value={profile.gender} onChange={(e) => setProfileField('gender', e.target.value as Gender)}>
               <option value="female">Female</option>
@@ -107,7 +109,7 @@ export function GoalsView({ goals, onSave }: { goals: Goals; onSave: (g: Goals) 
         </div>
         <div className="row">
           <div className="field"><label htmlFor="p-weight">Weight (lb)</label>
-            <input id="p-weight" type="number" inputMode="decimal" step="any" value={profile.weightLb} onChange={(e) => setProfileField('weightLb', parseFloat(e.target.value) || 0)} /></div>
+            <input id="p-weight" type="number" inputMode="decimal" step="any" max={200} value={profile.weightLb} onChange={(e) => setProfileField('weightLb', clamp(parseFloat(e.target.value) || 0, 0, 200))} /></div>
           <div className="field"><label>Height</label>
             <div className="row">
               <input type="number" inputMode="numeric" aria-label="Feet" placeholder="ft" value={heightFt} onChange={(e) => setHeightFt(e.target.value)} />
