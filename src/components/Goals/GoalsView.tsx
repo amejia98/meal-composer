@@ -37,12 +37,18 @@ export function GoalsView({ goals, onSave }: { goals: Goals; onSave: (g: Goals) 
   const [heightFt, setHeightFt] = useState(String(Math.floor(goals.heightIn / 12)));
   const [heightIn, setHeightIn] = useState(String(Math.round(goals.heightIn % 12)));
   const [targets, setTargets] = useState<TargetsForm>(targetsToForm(goals));
+  // Tracks whether the user has hand-edited a target field. While false,
+  // target fields track the suggestion live as the profile changes; once
+  // true, profile edits stop overwriting what the user typed — only
+  // "Reset to suggested" touches them again.
+  const [targetsDirty, setTargetsDirty] = useState(false);
 
   useEffect(() => {
     setProfile(goals);
     setHeightFt(String(Math.floor(goals.heightIn / 12)));
     setHeightIn(String(Math.round(goals.heightIn % 12)));
     setTargets(targetsToForm(goals));
+    setTargetsDirty(false);
   }, [goals]);
 
   const fullProfile: Profile = useMemo(() => ({
@@ -52,23 +58,30 @@ export function GoalsView({ goals, onSave }: { goals: Goals; onSave: (g: Goals) 
 
   const suggested = useMemo(() => computeTargets(fullProfile), [fullProfile]);
 
+  useEffect(() => {
+    if (!targetsDirty) {
+      setTargets({
+        calories: String(suggested.calories),
+        protein: String(suggested.protein),
+        carbs: String(suggested.carbs),
+        fat: String(suggested.fat),
+        fiber: String(suggested.fiber),
+        proteinFloorPerMeal: String(suggested.proteinFloorPerMeal),
+      });
+    }
+  }, [suggested, targetsDirty]);
+
   function setProfileField<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((p) => ({ ...p, [key]: value }));
   }
 
   function setTargetField<K extends keyof TargetsForm>(key: K, value: string) {
     setTargets((t) => ({ ...t, [key]: value }));
+    setTargetsDirty(true);
   }
 
   function resetToSuggested() {
-    setTargets({
-      calories: String(suggested.calories),
-      protein: String(suggested.protein),
-      carbs: String(suggested.carbs),
-      fat: String(suggested.fat),
-      fiber: String(suggested.fiber),
-      proteinFloorPerMeal: String(suggested.proteinFloorPerMeal),
-    });
+    setTargetsDirty(false);
     toast('Reset to suggested targets');
   }
 
