@@ -1,5 +1,7 @@
 /** Data model. Mirrors docs/spec.md §6 — keep them in sync. */
 
+import type { Profile } from './targets';
+
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 export type Nutrition = {
@@ -56,14 +58,13 @@ export type Recipe = {
   mealSlots: MealSlot[];
 };
 
-export type Goals = {
+export type Goals = Profile & {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   fiber: number;
   proteinFloorPerMeal: number;
-  rationale: string;
 };
 
 export type MealComponent = {

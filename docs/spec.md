@@ -169,20 +169,26 @@ type Meal = {
 }
 
 type Goals = {
+  // profile, feeds the suggested-targets calculator
+  age: number
+  gender: 'male' | 'female'
+  weightLb: number
+  heightIn: number
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'very-active'
+  goalType: 'bulk' | 'maintain' | 'lean'
+  // targets — editable, pre-filled by the calculator but not locked to it
   calories: number
   protein: number
   carbs: number
   fat: number
   fiber: number
   proteinFloorPerMeal: number     // 20–40g, see §9
-  rationale: string               // why these numbers — kills the re-derivation problem
 }
 ```
 
-Three notes worth defending:
+Two notes worth defending:
 
 - **Meal nutrition is derived, never stored.** If you fix a bad entry in the library, every past meal silently corrects itself.
-- **`Goals.rationale` is a real field.** It's a plain-language paragraph explaining why these numbers, visible on the Goals screen. This is the single field that most directly solves the problem in §1 — you can never again be in a position of having forgotten.
 - **`source` and `verified` exist because auto-filled data is guilty until proven innocent.** An item scanned from a label and never reviewed should be visually marked as such, so when a number looks weird six weeks later you know whether to trust it.
 
 ---

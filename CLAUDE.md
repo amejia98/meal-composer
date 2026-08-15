@@ -12,7 +12,8 @@ Not a planner, not a tracker. Single user, built for one person's phone.
 
 **Built so far:** the food library (add/edit food items and recipes, with
 nutrition-label parsing and serving-size conversion) and the Goals screen
-(`src/goals.js`, spec §9).
+(`src/components/Goals/GoalsView.tsx`, spec §9) — profile-based target
+calculator, not manual entry.
 
 **Not built yet:** the composer itself (spec §4), Sunday Prep (§10). The data
 model already has the fields these need; don't remove fields that look unused
@@ -21,13 +22,16 @@ that aren't here yet.
 
 ## Status (as of 2026-08-14)
 
-**Alexis's numbers, for the Goals screen (spec §9):** 130 lb (59 kg), 5'5"
-(165 cm), 28, female. Training: 3 zone-2 running days + 2–3 strength days/week,
-4 months post-surgery and still under PT — the running progression itself is
-PT's/surgeon's call, not this app's. Goal: lean recomposition, not aggressive
-cutting. Current saved targets: 1,800 cal · 125g protein (35g/meal floor) ·
-190g carbs · 60g fat · 26g fiber — derivation is in the `rationale` field on
-the Goals screen itself, don't re-derive it from scratch.
+**Goals are computed, not hand-derived.** `src/lib/targets.ts` (`computeTargets`)
+takes a profile (age, gender, weight, height, activity level, goal type —
+bulk/maintain/lean) and runs Mifflin-St Jeor + an activity multiplier + a
+goal-based calorie/protein adjustment to produce suggested calories, protein,
+carbs, fat, fiber, and a protein-floor-per-meal. The Goals screen shows the
+suggestion next to each editable field and a "Reset to suggested" button that
+overwrites the fields — the targets stay editable, they're just no longer
+freehand guesses. There is deliberately no rationale/explanation text field
+anymore; the calculation itself is the explanation. Don't reintroduce one
+without asking.
 
 **Design:** accent color is blue (`#2f8fe0` light / `#6fb8f5` dark), not the
 original coral/terracotta — Alexis's explicit preference, tried coral first
@@ -77,6 +81,7 @@ src/
     supabase.ts     Supabase client singleton
     label.ts        nutrition label parser — pure, no DOM (ported verbatim)
     nutrition.ts    serving-ratio scaling + recipe totals — pure, ported from items.js/recipes.js
+    targets.ts      Goals calculator (Mifflin-St Jeor + activity + goal type) — pure
     types.ts        FoodItem/Recipe/Step/Goals/Meal, mirrors spec §6
   hooks/            useFoodItems, useRecipes, useGoals — plain hooks over Supabase, not React Query (dataset is tiny, a cache library is unjustified)
   components/       Library, ItemForm, RecipeForm, Goals, shared
@@ -84,7 +89,9 @@ src/
 docs/
   spec.md           the design spec
   migration.sql     Supabase schema — already applied to the live project
-test/label.test.ts  unit tests for the parser (node --test)
+test/
+  label.test.ts     unit tests for the parser (node --test)
+  targets.test.ts   unit tests for the Goals calculator
 e2e/app.spec.ts     browser tests via Playwright, needs VITE_SUPABASE_URL/ANON_KEY set
 ```
 

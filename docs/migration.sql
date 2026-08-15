@@ -57,15 +57,24 @@ create table recipes (
 
 -- ------------------------------------------------------------------ goals
 -- Singleton row — the app always reads/writes the one row with this fixed id.
+-- Profile fields (age/gender/weight/height/activity/goal type) feed the
+-- suggested-targets calculator in src/lib/targets.ts; calories/protein/etc
+-- are editable and may diverge from what the calculator would currently
+-- suggest for the same profile.
 create table goals (
   id text primary key default 'singleton',
+  age integer not null,
+  gender text not null check (gender in ('male','female')),
+  weight_lb numeric not null,
+  height_in numeric not null,
+  activity_level text not null check (activity_level in ('sedentary','light','moderate','very-active')),
+  goal_type text not null check (goal_type in ('bulk','maintain','lean')),
   calories numeric not null,
   protein numeric not null,
   carbs numeric not null,
   fat numeric not null,
   fiber numeric not null,
   protein_floor_per_meal numeric not null,
-  rationale text not null default '',
   updated_at timestamptz not null default now()
 );
 
