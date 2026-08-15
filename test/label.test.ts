@@ -10,7 +10,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseNutritionLabel } from '../src/label.js';
+import { parseNutritionLabel } from '../src/lib/label.ts';
 
 test('English FDA-style panel', () => {
   const { nutrition, serving } = parseNutritionLabel(`Nutrition Facts

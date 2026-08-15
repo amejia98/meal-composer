@@ -1,4 +1,4 @@
-# Working on Sous Chef
+# Working on Meal Composer
 
 Read `docs/spec.md` before making design decisions. It's the source of truth for
 what this app is and — more importantly — what it deliberately isn't. This file
@@ -35,65 +35,75 @@ and rejected it. Cream/warm-white background, kept light and cheerful on
 purpose ("lighter and happier" was the ask that started the palette rework in
 `src/styles.css`). Respects `prefers-color-scheme` for dark mode.
 
-**In progress — moving off localStorage-only:** Alexis wants real sync across
-devices instead of manual export/import, using Supabase (already familiar
-from the Spanish-tutor-business project). This is a deliberate departure from
-the "no backend, no dependencies" architecture principle above — that
-principle was right for a pure offline single-device tool, but the actual goal
-now is a real always-with-you app. Plan discussed but not yet executed:
-1. Alexis creates a new Supabase project, provides the Project URL + anon key.
-2. Design tables mirroring the `FoodItem` / `Recipe` / `Goals` types in spec §6.
-3. Auth: leaning toward magic-link email (single user, no password to manage)
-   rather than Google OAuth — not finalized.
-4. Rewrite `state.js` to read/write Supabase instead of localStorage.
-5. Also deploying to Vercel (currently only reachable over LAN via
-   `scripts/dev.js`, which defeats the "open it at 7pm wherever you are"
-   premise in spec §1). Open question not yet answered: GitHub-backed repo
-   with auto-deploy, or CLI-only `vercel deploy` for now.
+**Migration executed — moved off localStorage-only:** Alexis wanted real sync
+across devices instead of manual export/import, using Supabase (already
+familiar from the Spanish-tutor-business project), and asked for "most
+conventional, actually usable, cool" — so the rewrite went to React + Vite +
+TypeScript rather than bolting Supabase onto the old vanilla-JS files. This is
+a deliberate, explicit departure from the old "no backend, no dependencies"
+principle below (kept here for history, not as a current rule).
+
+Status of the migration:
+1. GitHub repo + Vercel deploy — **user-driven, pending**: create the repo,
+   push, connect Vercel with auto-deploy from GitHub. Env vars needed on
+   Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+2. Supabase project — **user-driven, pending**: create the project, run
+   `docs/migration.sql` in the SQL editor, enable the Email provider for
+   magic-link auth, copy the Project URL + anon key into `.env.local` (see
+   `.env.example`).
+3. App code — **done**: React/Vite/TS app in `src/`, old vanilla app preserved
+   in `src-legacy/` until parity is confirmed, then delete it.
+4. One-time data import — **pending**, needs a live Supabase project first:
+   `src/components/Migrate/MigrateFromLocalStorage.tsx` reads the old
+   `localStorage['souschef.v1']` blob and imports it once Alexis is signed in
+   on a real Supabase-backed session.
 
 Neither Supabase nor Vercel credentials/projects exist yet — nothing has been
-created on Alexis's behalf, per policy on account creation. Next step is
-Alexis providing the Supabase Project URL + anon key once that project exists.
+created on Alexis's behalf, per policy on account creation.
 
 ## Architecture
 
-Static site. **No build step, no framework, no dependencies in the app itself.**
-Native ES modules, served as files. This is a deliberate choice: the app is
-small, it must run offline on a phone, and a toolchain is a tax on a project
-whose main risk is being abandoned. Don't add a bundler, and don't add React
-unless the composer genuinely forces it.
+React + Vite + TypeScript, backed by Supabase (Postgres + auth). Single user,
+magic-link email sign-in, RLS-scoped data. No router — four views, toggled by
+local state, same as the old `.active`-class approach.
 
 ```
-index.html          markup only — zero inline JS
+index.html          Vite entry shell
 src/
-  app.js            entry point: navigation, event wiring, boot
-  state.js          state + localStorage persistence (with fallback)
-  label.js          nutrition label parser — pure, no DOM
-  items.js          add/edit food item screen
-  recipes.js        add/edit recipe screen
-  library.js        list, search, export/import
-  styles.css        everything visual
-scripts/dev.js      zero-dep static server, binds LAN for phone testing
-test/
-  label.test.js     unit tests for the parser (node --test)
-  e2e.js            browser tests via Playwright
-docs/spec.md        the design spec
+  main.tsx          mounts <App/>, imports global CSS, dev-only test hook
+  App.tsx           view switch (lib/item/recipe/goals), owns the data hooks
+  lib/
+    supabase.ts     Supabase client singleton
+    label.ts        nutrition label parser — pure, no DOM (ported verbatim)
+    nutrition.ts    serving-ratio scaling + recipe totals — pure, ported from items.js/recipes.js
+    types.ts        FoodItem/Recipe/Step/Goals/Meal, mirrors spec §6
+  hooks/            useAuth, useFoodItems, useRecipes, useGoals — plain hooks over Supabase, not React Query (dataset is tiny, a cache library is unjustified)
+  components/       Library, ItemForm, RecipeForm, Goals, Auth, Migrate, shared
+  styles/index.css  everything visual, ported from the old styles.css
+src-legacy/         the retired vanilla-JS app — reference only, delete once the rewrite is confirmed to have full parity
+docs/
+  spec.md           the design spec
+  migration.sql     Supabase schema — run once in the SQL editor
+test/label.test.ts  unit tests for the parser (node --test)
+e2e/app.spec.ts     browser tests via Playwright, needs a Supabase test account (E2E_TEST_EMAIL/PASSWORD env vars)
 ```
 
 ## Conventions that matter
 
-**No inline event handlers.** Module scope isn't global, so `onclick="foo()"`
-silently does nothing. Every interaction is a `data-action="name"` attribute
-handled by the single delegated listener in `app.js`. To add one: put the
-attribute in the markup, add a case to `ACTIONS`. Delegation also means
-dynamically rendered rows work without rebinding.
+**`App.tsx` owns the data hooks, screens are dumb.** `useFoodItems`/`useRecipes`/
+`useGoals` are called once in `App.tsx` and passed down as props/callbacks —
+this replaces the old event-bus pattern (`items.js`/`recipes.js`/`library.js`
+talking through `emit`/`on` to stay acyclic). No event bus in the new code;
+React's data flow makes it unnecessary.
 
-**The module graph stays acyclic.** `items.js` and `recipes.js` never import
-`library.js` and vice versa. They communicate through the tiny event bus in
-`util.js` (`emit`/`on`), routed by `app.js`. If you find yourself wanting a
-cross import, emit an event instead.
+**No React Query, no state-management library.** The whole dataset (~80 items,
+a dozen recipes) fits in memory. Plain `useState`+`useEffect` hooks with a
+`refresh()` after mutations is enough — don't reach for heavier machinery at
+this scale.
 
-**`esc()` everything that reaches `innerHTML`.** Food names are user input.
+**JSX escapes by default — no `dangerouslySetInnerHTML` anywhere.** The old
+`esc()` helper doesn't have a new-code equivalent because it isn't needed;
+don't reintroduce raw HTML injection.
 
 **16px minimum font size on inputs.** Anything smaller makes iOS Safari zoom on
 focus, which feels broken.
@@ -117,31 +127,34 @@ the form before applying results — otherwise a miss silently keeps the previou
 product's number. This was a real bug.
 
 **Serving-size conversion is the subtle part of the item form.** Labels are per
-100g or per manufacturer serving; you eat one slice. `items.js` stores nutrition
+100g or per manufacturer serving; you eat one slice. `lib/nutrition.ts`
+(`computeRatio`/`scaleNutrition`, called from `ItemForm.tsx`) stores nutrition
 *per your serving*, scaled by `myAmount / labelAmount`. When editing an existing
 item the ratio is forced to 1:1 so a round-trip through the form can't
-re-scale — there's a test pinning this. Break it and the library drifts wrong in
-a way nobody notices for months.
+re-scale — there's an e2e test pinning this. Break it and the library drifts
+wrong in a way nobody notices for months.
 
 **Recipe ingredient quantities are in servings of a food item, not grams.** That
 sidesteps a unit-conversion layer entirely. If you ever need real weights, add a
-grams-per-serving field to `FoodItem` rather than teaching `recipes.js` unit
-math.
+grams-per-serving field to `FoodItem` rather than teaching `lib/nutrition.ts`
+unit math.
 
-**`state.js` wraps every localStorage call.** Some sandboxed contexts throw on
-access rather than returning null. The app degrades to session-only memory and
-says so in the UI. Don't unwrap these.
+**Data lives in Supabase now, not localStorage.** `hooks/useFoodItems.ts` /
+`useRecipes.ts` / `useGoals.ts` are async and RLS-scoped to the signed-in user
+— there's no offline fallback like the old `state.js` had. `src-legacy/state.js`
+is kept only for reference on the old localStorage-wrapping pattern.
 
 ## Running it
 
 ```bash
-npm install        # only needed for tests; the app has no runtime deps
-npm run dev        # http://localhost:5173 — also prints a LAN URL for your phone
-npm test           # parser unit tests, fast
-npm run test:e2e   # browser tests, needs the dev server (script starts one)
+npm install
+cp .env.example .env.local   # fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+npm run dev         # http://localhost:5173
+npm test            # parser unit tests, fast, no Supabase needed
+npm run test:e2e    # browser tests, needs a live Supabase project + E2E_TEST_EMAIL/PASSWORD
 ```
 
-Add a parser test *before* fixing a parse bug. `test/label.test.js` is cheap to
+Add a parser test *before* fixing a parse bug. `test/label.test.ts` is cheap to
 extend because the parser is pure — keep it that way.
 
 ## When you add the label-photo feature
@@ -157,7 +170,6 @@ API key can't live in client-side code. Two notes:
 
 ## Don't
 
-- Add a build step or framework without a concrete reason the current setup fails
 - Add fridge/inventory tracking (spec §11 explains why it's out)
 - Turn the composer into a tracker — logging is a side effect of composing, never
   a chore the user performs

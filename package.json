@@ -1,17 +1,30 @@
 {
-  "name": "souschef",
-  "version": "0.1.0",
+  "name": "meal-composer",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "A meal composer. Currently: the food library builder.",
+  "description": "A meal composer. Food library, recipes, and goals, synced via Supabase.",
   "scripts": {
-    "dev": "node scripts/dev.js",
-    "test": "node --test test/*.test.js",
-    "test:e2e": "node scripts/dev.js & sleep 1 && node test/e2e.js; kill %1",
-    "test:all": "npm test && npm run test:e2e"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "node --test --import tsx test/*.test.ts",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "playwright": "^1.47.0"
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "tsx": "^4.19.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
   },
   "engines": {
     "node": ">=20"

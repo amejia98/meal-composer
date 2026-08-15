@@ -1,4 +1,4 @@
-# Sous Chef — Design Spec v0.2
+# Meal Composer — Design Spec v0.2
 
 *A meal composer for Alexis. Drafted August 2026.*
 

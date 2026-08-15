@@ -1,4 +1,4 @@
-# Sous Chef
+# Meal Composer
 
 A meal composer. You pick the thing you actually feel like eating; it helps you
 build a complete meal around it that hits your protein and fiber targets.
@@ -8,15 +8,15 @@ Right now it's the **food library builder** — the part where you catalogue the
 
 ## Running it
 
-Requires Node 20+.
+Requires Node 20+, and a Supabase project (see "Your data" below).
 
 ```bash
-npm install      # only for the test tooling — the app itself has no dependencies
+npm install
+cp .env.example .env.local   # fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
 npm run dev
 ```
 
-Open http://localhost:5173. The dev server also prints a LAN address — open that
-one on your phone (same wifi) to use it where you'll actually use it.
+Open http://localhost:5173.
 
 To install it as an app: open it in Safari on your phone, tap Share → Add to
 Home Screen. It runs full-screen with no browser chrome.
@@ -42,11 +42,13 @@ and per-serving nutrition computes automatically. Tag steps as *make-ahead* or
 
 ## Your data
 
-Everything lives in your browser's local storage on the device you're using. It
-does not sync and it is not backed up anywhere.
+Synced to your account via Supabase, so it follows you across devices. Sign in
+with the magic-link email flow — no password. Row-level security scopes
+everything to your account.
 
-**Export a backup now and then.** The button is at the bottom of the library.
-Clearing site data or switching browsers loses everything otherwise.
+Run `docs/migration.sql` once in your Supabase project's SQL editor before
+first sign-in. **Export a backup now and then anyway** — the button is at the
+bottom of the library.
 
 ## Testing
 
