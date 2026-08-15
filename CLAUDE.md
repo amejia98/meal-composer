@@ -43,29 +43,38 @@ TypeScript rather than bolting Supabase onto the old vanilla-JS files. This is
 a deliberate, explicit departure from the old "no backend, no dependencies"
 principle below (kept here for history, not as a current rule).
 
+**No auth, by explicit choice.** Alexis considered magic-link and
+email+password and opted out of both — the app talks to Supabase directly
+with the anon key, no login screen. Data protection is the obscurity of the
+Supabase URL + anon key, not a real access-control boundary: RLS is enabled
+with fully permissive `using (true)` policies (Supabase's documented pattern
+for "no auth, but still go through RLS," not a disabled table, but
+functionally the same — anyone with the URL/key can read or write). Don't
+reintroduce a login screen without asking; this was a deliberate trade against
+the alternative (magic-link, already built once and then removed) for lower
+friction on a private single-user tool.
+
 Status of the migration:
 1. GitHub repo + Vercel deploy — **user-driven, pending**: create the repo,
    push, connect Vercel with auto-deploy from GitHub. Env vars needed on
    Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 2. Supabase project — **user-driven, pending**: create the project, run
-   `docs/migration.sql` in the SQL editor, enable the Email provider for
-   magic-link auth, copy the Project URL + anon key into `.env.local` (see
-   `.env.example`).
+   `docs/migration.sql` in the SQL editor (no auth provider setup needed),
+   copy the Project URL + anon key into `.env.local` (see `.env.example`).
 3. App code — **done**: React/Vite/TS app in `src/`, old vanilla app preserved
    in `src-legacy/` until parity is confirmed, then delete it.
 4. One-time data import — **pending**, needs a live Supabase project first:
    `src/components/Migrate/MigrateFromLocalStorage.tsx` reads the old
-   `localStorage['souschef.v1']` blob and imports it once Alexis is signed in
-   on a real Supabase-backed session.
+   `localStorage['souschef.v1']` blob and imports it on next app load.
 
 Neither Supabase nor Vercel credentials/projects exist yet — nothing has been
 created on Alexis's behalf, per policy on account creation.
 
 ## Architecture
 
-React + Vite + TypeScript, backed by Supabase (Postgres + auth). Single user,
-magic-link email sign-in, RLS-scoped data. No router — four views, toggled by
-local state, same as the old `.active`-class approach.
+React + Vite + TypeScript, backed by Supabase (Postgres, no auth — see above).
+No router — four views, toggled by local state, same as the old `.active`-class
+approach.
 
 ```
 index.html          Vite entry shell

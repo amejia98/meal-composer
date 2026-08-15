@@ -1,11 +1,8 @@
 /**
  * End-to-end tests against the real React app + a real Supabase project.
- *
- * Requires a dedicated Supabase test user (password auth enabled just for
- * this one account — magic links can't be scripted without an email inbox
- * to poll). Set these env vars before running:
- *
- *   E2E_TEST_EMAIL, E2E_TEST_PASSWORD
+ * No auth — the app talks to Supabase with the anon key directly, so these
+ * tests just need VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY configured (see
+ * .env.local) and a dev server running.
  *
  * Tests reach into window.__mealComposer for assertions, never for actions:
  * actions go through real clicks so the component wiring is covered. This
@@ -16,42 +13,21 @@
 
 import { test, expect, type Page } from '@playwright/test';
 
-const EMAIL = process.env.E2E_TEST_EMAIL;
-const PASSWORD = process.env.E2E_TEST_PASSWORD;
-
-test.skip(!EMAIL || !PASSWORD, 'Set E2E_TEST_EMAIL / E2E_TEST_PASSWORD to run e2e tests against a live Supabase project.');
-
-async function signIn(page: Page) {
+async function clearData(page: Page) {
   await page.goto('/');
   await page.waitForFunction(() => (window as any).__mealComposer);
-  // Password sign-in bypasses the magic-link UI for test speed; the
-  // Supabase test account has the email+password provider enabled.
-  await page.evaluate(
-    async ({ email, password }) => {
-      await (window as any).__mealComposer.supabase.auth.signInWithPassword({ email, password });
-    },
-    { email: EMAIL, password: PASSWORD },
-  );
-  await page.reload();
-  await expect(page.locator('h1')).toContainText('Your library');
-}
-
-async function clearAccountData(page: Page) {
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from('recipes').delete().eq('user_id', user.id);
-    await supabase.from('food_items').delete().eq('user_id', user.id);
-    await supabase.from('goals').delete().eq('user_id', user.id);
+    await supabase.from('recipes').delete().not('id', 'is', null);
+    await supabase.from('food_items').delete().not('id', 'is', null);
+    await supabase.from('goals').delete().not('id', 'is', null);
   });
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__mealComposer);
 }
 
 test.beforeEach(async ({ page }) => {
-  await signIn(page);
-  await clearAccountData(page);
-  await page.reload();
-  await page.waitForFunction(() => (window as any).__mealComposer);
+  await clearData(page);
 });
 
 test('label paste, serving conversion, save as unverified', async ({ page }) => {
@@ -114,10 +90,9 @@ test('recipe math and step phase-flip', async ({ page }) => {
   // Seed two items via the API to keep this test focused on the recipe form.
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
-    const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('food_items').insert([
-      { user_id: user.id, name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
-      { user_id: user.id, name: 'Arepa', category: 'carb', serving_label: '1 arepa', calories: 180, protein: 4, carbs: 38, fat: 2, fiber: 2, source: 'manual', verified: true },
+      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
+      { name: 'Arepa', category: 'carb', serving_label: '1 arepa', calories: 180, protein: 4, carbs: 38, fat: 2, fiber: 2, source: 'manual', verified: true },
     ]);
   });
 
@@ -150,12 +125,11 @@ test('recipe math and step phase-flip', async ({ page }) => {
 test('cannot delete an item a recipe depends on', async ({ page }) => {
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
-    const { data: { user } } = await supabase.auth.getUser();
     const { data: items } = await supabase.from('food_items').insert([
-      { user_id: user.id, name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
+      { name: 'Queso panela', category: 'dairy', serving_label: '1 slice', calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0, source: 'manual', verified: true },
     ]).select();
     await supabase.from('recipes').insert({
-      user_id: user.id, name: 'Uses queso', servings: 1,
+      name: 'Uses queso', servings: 1,
       ingredients: [{ itemId: items![0].id, qty: 1, unit: 'serving' }],
       steps: [], calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0,
     });
@@ -170,9 +144,8 @@ test('cannot delete an item a recipe depends on', async ({ page }) => {
 test('editing does not silently re-scale nutrition', async ({ page }) => {
   await page.evaluate(async () => {
     const { supabase } = (window as any).__mealComposer;
-    const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('food_items').insert({
-      user_id: user.id, name: 'Queso panela', category: 'dairy', serving_label: '1 slice',
+      name: 'Queso panela', category: 'dairy', serving_label: '1 slice',
       calories: 180, protein: 10.5, carbs: 3, fat: 12, fiber: 0,
       label_amount: 30, label_unit: 'g', label_my_amount: 45,
       source: 'label-scan', verified: false,

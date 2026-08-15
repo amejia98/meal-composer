@@ -42,12 +42,14 @@ and per-serving nutrition computes automatically. Tag steps as *make-ahead* or
 
 ## Your data
 
-Synced to your account via Supabase, so it follows you across devices. Sign in
-with the magic-link email flow — no password. Row-level security scopes
-everything to your account.
+Synced via Supabase, so it follows you across devices — no login. This is a
+personal single-user tool, so there's no account system; anyone with the
+Supabase URL and anon key (both live in the client) could read or write the
+data, same as anyone with the app's URL could use it. Treat the URL as
+something you don't publish.
 
 Run `docs/migration.sql` once in your Supabase project's SQL editor before
-first sign-in. **Export a backup now and then anyway** — the button is at the
+first use. **Export a backup now and then anyway** — the button is at the
 bottom of the library.
 
 ## Testing

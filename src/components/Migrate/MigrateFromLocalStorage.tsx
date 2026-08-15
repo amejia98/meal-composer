@@ -46,7 +46,7 @@ type OldGoals = {
 
 type OldData = { items: OldFoodItem[]; recipes: OldRecipe[]; goals: OldGoals | null };
 
-export function MigrateFromLocalStorage({ userId, onDone }: { userId: string; onDone: () => void }) {
+export function MigrateFromLocalStorage({ onDone }: { onDone: () => void }) {
   const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
 
@@ -64,7 +64,6 @@ export function MigrateFromLocalStorage({ userId, onDone }: { userId: string; on
       const idMap = new Map<string, string>();
       if (data.items.length) {
         const rows = data.items.map((it) => ({
-          user_id: userId,
           name: it.name,
           category: it.category,
           serving_label: it.servingLabel,
@@ -93,7 +92,6 @@ export function MigrateFromLocalStorage({ userId, onDone }: { userId: string; on
       let recipeCount = 0;
       if (data.recipes.length) {
         const rows = data.recipes.map((r) => ({
-          user_id: userId,
           name: r.name,
           servings: r.servings,
           ingredients: r.ingredients.map((g) => ({ itemId: idMap.get(g.itemId) ?? g.itemId, qty: g.qty, unit: g.unit })),
@@ -114,7 +112,7 @@ export function MigrateFromLocalStorage({ userId, onDone }: { userId: string; on
 
       if (data.goals) {
         const { error } = await supabase.from('goals').upsert({
-          user_id: userId,
+          id: 'singleton',
           calories: data.goals.calories,
           protein: data.goals.protein,
           carbs: data.goals.carbs,
@@ -139,7 +137,7 @@ export function MigrateFromLocalStorage({ userId, onDone }: { userId: string; on
   return (
     <div className="card">
       <h2>Found local data</h2>
-      <p className="hint">This browser has data saved from the old version of the app. Import it into your account?</p>
+      <p className="hint">This browser has data saved from the old version of the app. Import it?</p>
       {summary ? (
         <p className="note">{summary}</p>
       ) : (

@@ -135,6 +135,3 @@ nav button .ic{display:block;font-size:19px;margin-bottom:2px;line-height:1}
   pointer-events:none;max-width:88%;text-align:center;
 }
 .toast.show{opacity:1}
-
-/* -------------------------------------------------------------- auth */
-.auth-wrap{max-width:400px;margin:80px auto 0;padding:0 18px}

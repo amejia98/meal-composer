@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Goals } from '../lib/types';
 
+const SINGLETON_ID = 'singleton';
+
 /**
  * "Never a blank page" applies here too: the form always opens with a
  * computed proposal already filled in, not empty inputs. DEFAULTS is that
@@ -55,23 +57,21 @@ function fromRow(r: GoalsRow): Goals {
   };
 }
 
-export function useGoals(userId: string | undefined) {
+export function useGoals() {
   const [goals, setGoals] = useState<Goals | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!userId) return;
-    const { data, error } = await supabase.from('goals').select('*').eq('user_id', userId).maybeSingle();
+    const { data, error } = await supabase.from('goals').select('*').eq('id', SINGLETON_ID).maybeSingle();
     if (!error) setGoals(data ? fromRow(data as GoalsRow) : null);
     setLoading(false);
-  }, [userId]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   async function saveGoals(next: Goals) {
-    if (!userId) return 'not signed in';
     const { error } = await supabase.from('goals').upsert({
-      user_id: userId,
+      id: SINGLETON_ID,
       calories: next.calories,
       protein: next.protein,
       carbs: next.carbs,

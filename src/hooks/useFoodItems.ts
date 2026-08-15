@@ -43,10 +43,9 @@ function fromRow(r: FoodItemRow): FoodItem {
   };
 }
 
-function toRow(item: FoodItem, userId: string) {
+function toRow(item: FoodItem) {
   return {
     id: item.id || undefined,
-    user_id: userId,
     name: item.name,
     category: item.category,
     serving_label: item.servingLabel,
@@ -68,16 +67,15 @@ function toRow(item: FoodItem, userId: string) {
   };
 }
 
-export function useFoodItems(userId: string | undefined) {
+export function useFoodItems() {
   const [items, setItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!userId) return;
     const { data, error } = await supabase.from('food_items').select('*').order('name');
     if (!error) setItems((data as FoodItemRow[] ?? []).map(fromRow));
     setLoading(false);
-  }, [userId]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -87,8 +85,7 @@ export function useFoodItems(userId: string | undefined) {
     recipes.filter((r) => r.ingredients.some((g) => g.itemId === itemId));
 
   async function saveItem(item: FoodItem, isNew: boolean) {
-    if (!userId) return 'not signed in';
-    const row = toRow(item, userId);
+    const row = toRow(item);
     const { error } = isNew
       ? await supabase.from('food_items').insert(row)
       : await supabase.from('food_items').update(row).eq('id', item.id);

@@ -32,10 +32,9 @@ function fromRow(r: RecipeRow): Recipe {
   };
 }
 
-function toRow(recipe: Recipe, userId: string) {
+function toRow(recipe: Recipe) {
   return {
     id: recipe.id || undefined,
-    user_id: userId,
     name: recipe.name,
     servings: recipe.servings,
     ingredients: recipe.ingredients,
@@ -51,24 +50,22 @@ function toRow(recipe: Recipe, userId: string) {
   };
 }
 
-export function useRecipes(userId: string | undefined) {
+export function useRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!userId) return;
     const { data, error } = await supabase.from('recipes').select('*').order('name');
     if (!error) setRecipes((data as RecipeRow[] ?? []).map(fromRow));
     setLoading(false);
-  }, [userId]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const findRecipe = (id: string) => recipes.find((r) => r.id === id);
 
   async function saveRecipe(recipe: Recipe, isNew: boolean) {
-    if (!userId) return 'not signed in';
-    const row = toRow(recipe, userId);
+    const row = toRow(recipe);
     const { error } = isNew
       ? await supabase.from('recipes').insert(row)
       : await supabase.from('recipes').update(row).eq('id', recipe.id);

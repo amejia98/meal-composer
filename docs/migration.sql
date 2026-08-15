@@ -1,14 +1,14 @@
--- Meal Composer schema. Single-user app; every table scoped to auth.uid()
--- via RLS. Paste this into the Supabase SQL editor (Project → SQL Editor →
--- New query) and run it once, after creating the project and before first
--- sign-in.
+-- Meal Composer schema. No auth — this is a personal, single-user app and
+-- the anon key is used directly. RLS is enabled with permissive policies
+-- (protection is the obscurity of the Supabase URL + anon key, not a login).
+-- Paste this into the Supabase SQL editor (Project → SQL Editor → New
+-- query) and run it once, after creating the project.
 
 create extension if not exists "pgcrypto"; -- gen_random_uuid()
 
 -- ------------------------------------------------------------- food_items
 create table food_items (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) default auth.uid(),
   name text not null,
   category text not null check (category in
     ('protein','carb','fruit','veg','fat','dairy','condiment')),
@@ -34,12 +34,9 @@ create table food_items (
   updated_at timestamptz not null default now()
 );
 
-create index food_items_user_id_idx on food_items(user_id);
-
 -- ---------------------------------------------------------------- recipes
 create table recipes (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) default auth.uid(),
   name text not null,
   servings integer not null default 4,
   ingredients jsonb not null default '[]',   -- [{itemId, qty, unit}]
@@ -58,11 +55,10 @@ create table recipes (
   updated_at timestamptz not null default now()
 );
 
-create index recipes_user_id_idx on recipes(user_id);
-
 -- ------------------------------------------------------------------ goals
+-- Singleton row — the app always reads/writes the one row with this fixed id.
 create table goals (
-  user_id uuid primary key references auth.users(id) default auth.uid(),
+  id text primary key default 'singleton',
   calories numeric not null,
   protein numeric not null,
   carbs numeric not null,
@@ -79,14 +75,13 @@ create table goals (
 -- intentionally NOT a column — always derived from components at read time.
 create table meals (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) default auth.uid(),
   date date not null,
   slot text not null check (slot in ('breakfast','lunch','dinner','snack')),
   components jsonb not null default '[]',  -- [{refId, refType, servings}]
   created_at timestamptz not null default now()
 );
 
-create index meals_user_id_date_idx on meals(user_id, date);
+create index meals_date_idx on meals(date);
 
 -- --------------------------------------------------------------- updated_at
 create or replace function set_updated_at() returns trigger as $$
@@ -104,16 +99,16 @@ create trigger goals_updated_at before update on goals
   for each row execute function set_updated_at();
 
 -- ---------------------------------------------------------------------- RLS
+-- Enabled with fully permissive policies — no login, so there's no auth.uid()
+-- to scope by. The anon key + RLS-enabled-but-open combination is Supabase's
+-- documented pattern for "no auth, but still go through RLS" rather than
+-- disabling RLS outright.
 alter table food_items enable row level security;
 alter table recipes    enable row level security;
 alter table goals      enable row level security;
 alter table meals      enable row level security;
 
-create policy "own food_items" on food_items
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own recipes" on recipes
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own goals" on goals
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own meals" on meals
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "public food_items" on food_items for all using (true) with check (true);
+create policy "public recipes"    on recipes    for all using (true) with check (true);
+create policy "public goals"      on goals      for all using (true) with check (true);
+create policy "public meals"      on meals      for all using (true) with check (true);

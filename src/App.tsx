@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from './hooks/useAuth';
 import { useFoodItems } from './hooks/useFoodItems';
 import { useRecipes } from './hooks/useRecipes';
 import { useGoals } from './hooks/useGoals';
-import { LoginScreen } from './components/Auth/LoginScreen';
 import { LibraryView } from './components/Library/LibraryView';
 import { ItemForm } from './components/ItemForm/ItemForm';
 import { RecipeForm } from './components/RecipeForm/RecipeForm';
@@ -25,24 +23,13 @@ const TITLES: Record<View, (editing: boolean) => string> = {
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 export default function App() {
-  const { session, loading: authLoading, signOut } = useAuth();
-  const userId = session?.user.id;
-
-  const foodItems = useFoodItems(userId);
-  const recipes = useRecipes(userId);
-  const goalsHook = useGoals(userId);
+  const foodItems = useFoodItems();
+  const recipes = useRecipes();
+  const goalsHook = useGoals();
 
   const [view, setView] = useState<View>('lib');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
-
-  if (authLoading) return null;
-  if (!session || !userId) return (
-    <>
-      <LoginScreen />
-      <Toast />
-    </>
-  );
 
   function navigate(v: View) {
     setView(v);
@@ -73,7 +60,7 @@ export default function App() {
       <main>
         {view === 'lib' && (
           <>
-            <MigrateFromLocalStorage userId={userId} onDone={() => { foodItems.refresh(); recipes.refresh(); goalsHook.refresh(); }} />
+            <MigrateFromLocalStorage onDone={() => { foodItems.refresh(); recipes.refresh(); goalsHook.refresh(); }} />
             <LibraryView
               items={foodItems.items}
               recipes={recipes.recipes}
@@ -84,7 +71,6 @@ export default function App() {
                 for (const r of recs) await recipes.saveRecipe(r, true);
               }}
             />
-            <button className="btn-ghost btn-sm" style={{ marginTop: 10 }} onClick={() => signOut()}>Sign out</button>
           </>
         )}
 
