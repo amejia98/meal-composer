@@ -3,15 +3,15 @@
    system. Don't add a CSS framework for this. */
 
 :root{
-  --bg:#faf7f2; --surface:#fff; --surface-2:#f3ede4; --line:#e4dbcd;
-  --text:#2a2320; --muted:#7c6f64; --accent:#b4552d; --accent-soft:#f6e7de;
-  --good:#4a7c59; --radius:14px;
+  --bg:#fffaf3; --surface:#fff; --surface-2:#eaf3fc; --line:#dbe9f7;
+  --text:#20262c; --muted:#7c8894; --accent:#2f8fe0; --accent-soft:#dcedfc;
+  --good:#2fa66a; --radius:16px;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#1a1715; --surface:#232019; --surface-2:#2c2721; --line:#3a332b;
-    --text:#f0e9e0; --muted:#a2968a; --accent:#e08a5f; --accent-soft:#3a2820;
-    --good:#7fb08d;
+    --bg:#1c211f; --surface:#252b28; --surface-2:#25313d; --line:#33414f;
+    --text:#f6f1e8; --muted:#a9a49b; --accent:#6fb8f5; --accent-soft:#20374a;
+    --good:#6ecb96;
   }
 }
 

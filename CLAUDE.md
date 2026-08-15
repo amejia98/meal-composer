@@ -10,13 +10,50 @@ A meal *composer*: you pick the thing you actually feel like eating, and the app
 helps you build a complete meal around it that lands on your nutrition targets.
 Not a planner, not a tracker. Single user, built for one person's phone.
 
-**Built so far:** the food library — add/edit food items and recipes, with
-nutrition-label parsing and serving-size conversion.
+**Built so far:** the food library (add/edit food items and recipes, with
+nutrition-label parsing and serving-size conversion) and the Goals screen
+(`src/goals.js`, spec §9).
 
-**Not built yet:** the composer itself (spec §4), goals and targets (§9), Sunday
-Prep (§10). The data model already has the fields these need; don't remove
-fields that look unused (`pairsWith`, `lastEaten`, `Step.phase`) — they're load
-bearing for features that aren't here yet.
+**Not built yet:** the composer itself (spec §4), Sunday Prep (§10). The data
+model already has the fields these need; don't remove fields that look unused
+(`pairsWith`, `lastEaten`, `Step.phase`) — they're load bearing for features
+that aren't here yet.
+
+## Status (as of 2026-08-14)
+
+**Alexis's numbers, for the Goals screen (spec §9):** 130 lb (59 kg), 5'5"
+(165 cm), 28, female. Training: 3 zone-2 running days + 2–3 strength days/week,
+4 months post-surgery and still under PT — the running progression itself is
+PT's/surgeon's call, not this app's. Goal: lean recomposition, not aggressive
+cutting. Current saved targets: 1,800 cal · 125g protein (35g/meal floor) ·
+190g carbs · 60g fat · 26g fiber — derivation is in the `rationale` field on
+the Goals screen itself, don't re-derive it from scratch.
+
+**Design:** accent color is blue (`#2f8fe0` light / `#6fb8f5` dark), not the
+original coral/terracotta — Alexis's explicit preference, tried coral first
+and rejected it. Cream/warm-white background, kept light and cheerful on
+purpose ("lighter and happier" was the ask that started the palette rework in
+`src/styles.css`). Respects `prefers-color-scheme` for dark mode.
+
+**In progress — moving off localStorage-only:** Alexis wants real sync across
+devices instead of manual export/import, using Supabase (already familiar
+from the Spanish-tutor-business project). This is a deliberate departure from
+the "no backend, no dependencies" architecture principle above — that
+principle was right for a pure offline single-device tool, but the actual goal
+now is a real always-with-you app. Plan discussed but not yet executed:
+1. Alexis creates a new Supabase project, provides the Project URL + anon key.
+2. Design tables mirroring the `FoodItem` / `Recipe` / `Goals` types in spec §6.
+3. Auth: leaning toward magic-link email (single user, no password to manage)
+   rather than Google OAuth — not finalized.
+4. Rewrite `state.js` to read/write Supabase instead of localStorage.
+5. Also deploying to Vercel (currently only reachable over LAN via
+   `scripts/dev.js`, which defeats the "open it at 7pm wherever you are"
+   premise in spec §1). Open question not yet answered: GitHub-backed repo
+   with auto-deploy, or CLI-only `vercel deploy` for now.
+
+Neither Supabase nor Vercel credentials/projects exist yet — nothing has been
+created on Alexis's behalf, per policy on account creation. Next step is
+Alexis providing the Supabase Project URL + anon key once that project exists.
 
 ## Architecture
 
