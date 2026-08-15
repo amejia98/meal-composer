@@ -6,7 +6,6 @@ import { LibraryView } from './components/Library/LibraryView';
 import { ItemForm } from './components/ItemForm/ItemForm';
 import { RecipeForm } from './components/RecipeForm/RecipeForm';
 import { GoalsView } from './components/Goals/GoalsView';
-import { MigrateFromLocalStorage } from './components/Migrate/MigrateFromLocalStorage';
 import { NavBar } from './components/shared/NavBar';
 import { Toast } from './components/shared/Toast';
 import { toast } from './components/shared/toastBus';
@@ -59,19 +58,12 @@ export default function App() {
 
       <main>
         {view === 'lib' && (
-          <>
-            <MigrateFromLocalStorage onDone={() => { foodItems.refresh(); recipes.refresh(); goalsHook.refresh(); }} />
-            <LibraryView
-              items={foodItems.items}
-              recipes={recipes.recipes}
-              onOpenItem={openItem}
-              onOpenRecipe={openRecipe}
-              onImport={async (items, recs) => {
-                for (const it of items) await foodItems.saveItem(it, true);
-                for (const r of recs) await recipes.saveRecipe(r, true);
-              }}
-            />
-          </>
+          <LibraryView
+            items={foodItems.items}
+            recipes={recipes.recipes}
+            onOpenItem={openItem}
+            onOpenRecipe={openRecipe}
+          />
         )}
 
         {view === 'item' && (

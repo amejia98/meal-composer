@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { FoodItem, Recipe } from '../../lib/types';
-import { toast } from '../shared/toastBus';
 
 type Tab = 'items' | 'recipes';
 
@@ -41,13 +40,12 @@ function RecipeRow({ recipe, onOpen }: { recipe: Recipe; onOpen: (id: string) =>
 }
 
 export function LibraryView({
-  items, recipes, onOpenItem, onOpenRecipe, onImport,
+  items, recipes, onOpenItem, onOpenRecipe,
 }: {
   items: FoodItem[];
   recipes: Recipe[];
   onOpenItem: (id: string) => void;
   onOpenRecipe: (id: string) => void;
-  onImport: (items: FoodItem[], recipes: Recipe[]) => Promise<void>;
 }) {
   const [tab, setTab] = useState<Tab>('items');
   const [query, setQuery] = useState('');
@@ -57,39 +55,6 @@ export function LibraryView({
   const rows = source
     .filter((x) => x.name.toLowerCase().includes(q))
     .sort((a, b) => a.name.localeCompare(b.name));
-
-  function exportBackup() {
-    const blob = new Blob([JSON.stringify({ items, recipes }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'meal-composer-library.json';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('Backup downloaded');
-  }
-
-  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const parsed = JSON.parse(String(reader.result));
-        if (!Array.isArray(parsed.items) || !Array.isArray(parsed.recipes)) {
-          throw new Error('bad shape');
-        }
-        await onImport(parsed.items, parsed.recipes);
-        toast(`Imported — ${plural(parsed.items.length, 'item')}, ${plural(parsed.recipes.length, 'recipe')}`);
-      } catch {
-        toast("That file didn't look like a Meal Composer backup");
-      }
-    };
-    reader.readAsText(file);
-  }
 
   return (
     <section>
@@ -118,15 +83,6 @@ export function LibraryView({
           (rows as Recipe[]).map((r) => <RecipeRow key={r.id} recipe={r} onOpen={onOpenRecipe} />)
         )}
       </div>
-
-      <div className="row" style={{ marginTop: 20 }}>
-        <button className="btn-ghost btn-sm" style={{ flex: 1 }} onClick={exportBackup}>Export backup</button>
-        <label className="btn-ghost btn-sm" style={{ flex: 1, textAlign: 'center' }}>
-          Import
-          <input type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
-        </label>
-      </div>
-      <p className="note">Synced to your account via Supabase — no manual backup needed day to day, but export now and then anyway.</p>
     </section>
   );
 }

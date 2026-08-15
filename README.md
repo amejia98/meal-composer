@@ -49,8 +49,7 @@ data, same as anyone with the app's URL could use it. Treat the URL as
 something you don't publish.
 
 Run `docs/migration.sql` once in your Supabase project's SQL editor before
-first use. **Export a backup now and then anyway** — the button is at the
-bottom of the library.
+first use.
 
 ## Testing
 

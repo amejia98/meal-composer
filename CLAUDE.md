@@ -35,40 +35,32 @@ and rejected it. Cream/warm-white background, kept light and cheerful on
 purpose ("lighter and happier" was the ask that started the palette rework in
 `src/styles.css`). Respects `prefers-color-scheme` for dark mode.
 
-**Migration executed — moved off localStorage-only:** Alexis wanted real sync
-across devices instead of manual export/import, using Supabase (already
-familiar from the Spanish-tutor-business project), and asked for "most
-conventional, actually usable, cool" — so the rewrite went to React + Vite +
-TypeScript rather than bolting Supabase onto the old vanilla-JS files. This is
-a deliberate, explicit departure from the old "no backend, no dependencies"
-principle below (kept here for history, not as a current rule).
+**Migrated off the old vanilla-JS/localStorage app — this is a fresh start.**
+The original "Sous Chef" prototype (localStorage-only, no build step) was
+rewritten to React + Vite + TypeScript + Supabase, live at GitHub
+(`amejia98/meal-composer`) and deployed on Vercel. There was no real data in
+the old app to carry over, so this was a clean rewrite, not a data migration
+— don't look for a `src-legacy/` or an old-data importer, neither exists
+(deliberately removed once confirmed unneeded).
 
 **No auth, by explicit choice.** Alexis considered magic-link and
 email+password and opted out of both — the app talks to Supabase directly
-with the anon key, no login screen. Data protection is the obscurity of the
-Supabase URL + anon key, not a real access-control boundary: RLS is enabled
-with fully permissive `using (true)` policies (Supabase's documented pattern
-for "no auth, but still go through RLS," not a disabled table, but
-functionally the same — anyone with the URL/key can read or write). Don't
-reintroduce a login screen without asking; this was a deliberate trade against
-the alternative (magic-link, already built once and then removed) for lower
-friction on a private single-user tool.
+with the anon (publishable) key, no login screen. Data protection is the
+obscurity of the Supabase URL + key, not a real access-control boundary: RLS
+is enabled with fully permissive `using (true)` policies (Supabase's
+documented pattern for "no auth, but still go through RLS," not a disabled
+table, but functionally the same — anyone with the URL/key can read or
+write). Don't reintroduce a login screen without asking.
 
-Status of the migration:
-1. GitHub repo + Vercel deploy — **user-driven, pending**: create the repo,
-   push, connect Vercel with auto-deploy from GitHub. Env vars needed on
-   Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
-2. Supabase project — **user-driven, pending**: create the project, run
-   `docs/migration.sql` in the SQL editor (no auth provider setup needed),
-   copy the Project URL + anon key into `.env.local` (see `.env.example`).
-3. App code — **done**: React/Vite/TS app in `src/`, old vanilla app preserved
-   in `src-legacy/` until parity is confirmed, then delete it.
-4. One-time data import — **pending**, needs a live Supabase project first:
-   `src/components/Migrate/MigrateFromLocalStorage.tsx` reads the old
-   `localStorage['souschef.v1']` blob and imports it on next app load.
+## Deployed
 
-Neither Supabase nor Vercel credentials/projects exist yet — nothing has been
-created on Alexis's behalf, per policy on account creation.
+- **Repo:** github.com/amejia98/meal-composer, branch `master`.
+- **Supabase:** project `ogkheoaphvqxtmsddnry` — schema is `docs/migration.sql`,
+  already applied. Client uses the publishable key (`sb_publishable_...`), not
+  the legacy anon JWT.
+- **Vercel:** deployed, `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` set as env
+  vars, Deployment Protection turned off so the URL is reachable without a
+  Vercel login (matches the "no auth" stance above).
 
 ## Architecture
 
@@ -86,15 +78,14 @@ src/
     label.ts        nutrition label parser — pure, no DOM (ported verbatim)
     nutrition.ts    serving-ratio scaling + recipe totals — pure, ported from items.js/recipes.js
     types.ts        FoodItem/Recipe/Step/Goals/Meal, mirrors spec §6
-  hooks/            useAuth, useFoodItems, useRecipes, useGoals — plain hooks over Supabase, not React Query (dataset is tiny, a cache library is unjustified)
-  components/       Library, ItemForm, RecipeForm, Goals, Auth, Migrate, shared
-  styles/index.css  everything visual, ported from the old styles.css
-src-legacy/         the retired vanilla-JS app — reference only, delete once the rewrite is confirmed to have full parity
+  hooks/            useFoodItems, useRecipes, useGoals — plain hooks over Supabase, not React Query (dataset is tiny, a cache library is unjustified)
+  components/       Library, ItemForm, RecipeForm, Goals, shared
+  styles/index.css  everything visual
 docs/
   spec.md           the design spec
-  migration.sql     Supabase schema — run once in the SQL editor
+  migration.sql     Supabase schema — already applied to the live project
 test/label.test.ts  unit tests for the parser (node --test)
-e2e/app.spec.ts     browser tests via Playwright, needs a Supabase test account (E2E_TEST_EMAIL/PASSWORD env vars)
+e2e/app.spec.ts     browser tests via Playwright, needs VITE_SUPABASE_URL/ANON_KEY set
 ```
 
 ## Conventions that matter
@@ -148,10 +139,10 @@ sidesteps a unit-conversion layer entirely. If you ever need real weights, add a
 grams-per-serving field to `FoodItem` rather than teaching `lib/nutrition.ts`
 unit math.
 
-**Data lives in Supabase now, not localStorage.** `hooks/useFoodItems.ts` /
-`useRecipes.ts` / `useGoals.ts` are async and RLS-scoped to the signed-in user
-— there's no offline fallback like the old `state.js` had. `src-legacy/state.js`
-is kept only for reference on the old localStorage-wrapping pattern.
+**All data lives in Supabase, no offline fallback.** `hooks/useFoodItems.ts` /
+`useRecipes.ts` / `useGoals.ts` are async, straight to Postgres via the anon
+key — no localStorage, no degrade-to-memory mode. If Supabase is unreachable
+the app just fails to load data; there's no offline story yet.
 
 ## Running it
 
